@@ -1,0 +1,153 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import random, sys
+from pprint import pprint
+from PIL import Image
+
+
+def grid2D(w, h):
+	g = []
+	for x in range(w):
+		g.append([])
+		for y in range(h):
+			g[x].append(0.0)
+	return g
+
+
+def WhiteNoise(w, h, s):
+	random.seed(s)
+	g = []
+	for x in range(w):
+		g.append([])
+		for y in range(h):
+			g[x].append(random.random())
+	img = Image.new('RGB', (width, height) )
+	printImg(img, g, 'white-noise.png')
+	return g
+
+
+def printImg(img, data, name):
+	(w, h) = img.size
+	for x in range(w):
+		for y in range(h):
+			blue = int( 256 * data[x][y] )
+			img.putpixel( (x,y), (0,0,blue) )
+	img.save(name, 'PNG')
+
+
+def Interpolate(a, b, f):
+	return a*(1-f) + f*b
+
+
+def SmoothNoise(base_noise, octave):
+	smooth_noise = grid2D(width, height)
+	period = pow(2, octave)
+	frequency = 1.0/period
+	dbg_str = 'Smooth Noise Debug\nperiod: %d  |  frequency: %f' % (period, frequency)
+	
+	for x in range(width):
+		dbg_str += '\n\n######## X%d ########\n' % x
+		sx0 = (float(x) // period) * period
+		dbg_str += 'sx0: %f' % sx0
+		#sx0 = int(sx0)
+		#dbg_str += '  %d\n' % sx0
+		
+		sx1 = (sx0 + period) % width
+		dbg_str += 'sx1: %f' % sx1
+		#sx1 = int(sx1)
+		#dbg_str += '  %d\n' % sx1
+		
+		blend_hor = (float(x) - sx0) * frequency
+		dbg_str += 'blend Hor: %f\n' % blend_hor
+		
+		for y in range(height):
+			dbg_str += '\n::: X%d Y%d :::\n' % (x,y)
+			sy0 = (float(y) // period) * period
+			dbg_str += 'sy0: %f' % sy0
+			#sy0 = int(sy0)
+			#dbg_str += '  %d\n' % sy0
+			
+			sy1 = (sy0 + period) % height
+			dbg_str += 'sy1: %f' % sy1
+			#sy1 = int(sy1)
+			#dbg_str += '  %d\n' % sy1
+			
+			blend_ver = (float(y) - sy0) * frequency
+			dbg_str += 'blend Ver: %f\n' % blend_ver
+			
+			x0 = int(sx0)
+			x1 = int(sx1)
+			y0 = int(sy0)
+			y1 = int(sy1)
+			
+			top = Interpolate(base_noise[x0][y0], base_noise[x1][y0], blend_hor)
+			dbg_str += 'top: %f' % top
+			
+			bot = Interpolate(base_noise[x0][y1], base_noise[x1][y1], blend_hor)
+			dbg_str += '  bot: %f\n' % bot
+			
+			final = Interpolate(top, bot, blend_ver)
+			dbg_str += 'Final: %f\n' % final
+			
+			smooth_noise[x][y] = final
+	
+	img_s = Image.new('RGB', (width, height) )
+	printImg(img_s, smooth_noise, 'sm-step-o%d.png' % octave)
+	with open('smooth-%d.txt' % octave, 'w') as file:
+		file.write(dbg_str)
+	
+	return smooth_noise
+
+
+def PerlinNoise(base_noise, octave_count):
+	smooth_noises = []
+	for i in range(octave_count):
+		smooth_noises.append( SmoothNoise(base_noise, i) )
+	
+	perlin_noise = grid2D(width, height)
+	
+	persistance = 0.5
+	amplitude = 1.0
+	total_amp = 0.0
+	
+	i = octave_count
+	for o in range(octave_count):
+		i -= 1
+		amplitude *= persistance
+		total_amp += amplitude
+		
+		for x in range(width):
+			for y in range(height):
+				perlin_noise[x][y] += smooth_noises[i][x][y] * amplitude
+	
+	for x in range(width):
+		for y in range(height):
+			perlin_noise[x][y] = perlin_noise[x][y] / total_amp
+			
+	img_pn = Image.new('RGB', (width, height) )
+	printImg(img_pn, perlin_noise, 'final.png')
+	
+	return perlin_noise
+
+
+width = int(sys.argv[1])
+height = int(sys.argv[2])
+octaves = int(sys.argv[3])
+seed = 0
+
+noise_w = WhiteNoise(width, height, seed)
+noise_p = PerlinNoise(noise_w, octaves)
+
+
+
+
+
+
+
+
+
+
+
+
+

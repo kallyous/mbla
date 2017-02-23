@@ -1,0 +1,12 @@
+{"tiles"[
+    {"id": 0, "name":"empty", "asset_file":"", "asset_x": 0, "asset_y": 0, type:"empty"},
+    {"id": 1, "name":"Deep Water", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"liquid"},
+    {"id": 2, "name":"Shallow Water", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"liquid"},
+    {"id": 3, "name":"Dirt", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"ground"},
+    {"id": 4, "name":"Grass", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"ground"},
+    {"id": 5, "name":"Sand", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"ground"},
+    {"id": 6, "name":"Snow", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"ground"},
+    {"id": 7, "name":"Stone", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"ground"},
+    {"id": 8, "name":"Lava", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"liquid"},
+    {"id": 9, "name":"Hole", "asset_file":"dev-terrain.png", "asset_x": 0, "asset_y": 0, type:"empty"}
+]}

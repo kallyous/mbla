@@ -1,0 +1,144 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import codecs, sys, json, gzip
+from pprint import pprint
+
+help_msg = u"""Usage: mapper -option arg_1 arg_2 ... arg_N
+Options:
+	 --help | -h		Show this message and exit.
+	 --pack | -p		Packs a map from json format into the game used format.
+	--unpack | -u		Unpacks a map from game format into Tiled readalbe json.
+	
+Notes: 	Wen saving a map from Tiled, make sure it is on plain CSV and save it as JSON.
+		Land's mapper uses zlib for compressing only the data and discarding uncecessary
+		extra characters. It is good for the server, it is good for the player, it is only
+		bad for you and me, since it means extra work. Ha!
+		Also, be nice and use utf-8 on everything, will you?"""
+
+if len(sys.argv) < 2 or sys.argv[1] == u'-h' or sys.argv[1] == u'--help':
+	print(help_msg)
+	sys.exit(1)
+
+if sys.argv[1] == u'-p' or sys.argv[1] == u'--pack':
+	i = 0
+	for arg in sys.argv:
+		i += 1
+		if i == 1 or i == 2: continue
+		
+		with codecs.open(arg, 'r', 'utf-8') as src_file:
+			data_str = u''
+			for line in src_file:
+				data_str += line
+		
+		data_json = json.loads(data_str)
+		biome = u'island'
+		owner = u'nature'
+		width = data_json['width']
+		height = data_json['height']
+		tile_maps = []
+		
+		# extract layers data
+		for layer in data_json['layers']:
+			# Data maps
+			if layer['name'] == 'ground':
+				ground = [ u'ground', layer['data'] ]
+				continue
+			if layer['name'] == 'floor':
+				floor = [ u'floor', layer['data'] ]
+				continue
+			if layer['name'] == 'walls':
+				walls = [ u'walls', layer['data'] ]
+				continue
+			if layer['name'] == 'roof':
+				roof = [ u'roof', layer['data'] ]
+				continue
+			# Objects list
+			if layer['name'] == 'objects':
+				obj_str = u''
+				obj_n = 0
+				for o in layer['objects']:
+					#     id  x  y  z  TODO: Z should be readable
+					s = u'%d %d %d %d\n' % (o['id'], o['x']/32, o['y']/32, 0)
+					obj_str += s
+					obj_n += 1
+				continue
+			# Entities list
+			if layer['name'] == 'entities':
+				ent_str = u''
+				ent_n = 0
+				for e in layer['objects']:
+					#     id  x  y  z  TODO: Z should be readable
+					s = u'%d %d %d %d\n' % (e['id'], e['x']/32, e['y']/32, 0)
+					ent_str += s
+					ent_n += 1
+					continue
+			# Effects list
+			if layer['name'] == 'effects':
+				# Get effects for list
+				fx_str = u''
+				fx_n = 0
+				for f in layer['objects']:
+					#     id  x  y  z  TODO: Z should be readable
+					s = u'%d %d %d %d\n' % (f['id'], f['x']/32, f['y']/32, 0)
+					fx_str += s
+					fx_n += 1
+				continue
+		# appends in order
+		tile_maps.append(ground)
+		tile_maps.append(floor)
+		tile_maps.append(walls)
+		tile_maps.append(roof)
+		
+		# Final content #
+		data_out = u''
+		out_file_name = arg.replace('.json', '.gz')
+		data_out += u'%s\n' % biome
+		data_out += owner+'\n'
+		data_out += u'%d %d\n' % (width, height)
+		# Layers stuff
+		for m in tile_maps:
+			i = 0
+			data = u''
+			data_out += u'data_map %s\n' % m[0]
+			for y in range(0, height):
+				for x in range(0, width):
+					data += u'%d ' % m[1][i]
+					i += 1
+				data = u'%s\n' % data.rstrip()
+			data_out += data
+		# Objects list
+		data_out += u'obj_list %d\n%s' % (obj_n, obj_str)
+		# Entities list
+		data_out += u'entity_list %d\n%s' % (ent_n, ent_str)
+		# Effects list
+		data_out += u'effect_list %d\n%s' % (fx_n, fx_str)
+		# Clear leading and rear
+		data_out = data_out.strip()
+		
+		# Writes final shit compressed with gzip
+		with gzip.open(out_file_name, 'wb') as out_file:
+			out_file.write( data_out.encode('utf-8') )
+	
+	sys.exit(0)
+
+print(u'Invalid option \'%s\'' % sys.argv[1])
+print(help_msg)
+sys.exit(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
