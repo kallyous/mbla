@@ -9,7 +9,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-from viper.__init__ import CONF
 from viper.vipermethods import grid2D
 
 SEA = 0
@@ -42,9 +41,9 @@ def GenerateTerrain(topography, biome):
     
     for x in range(sect_width):
         for y in range(sect_height):
-            sum = topography[x][y]
+            topography_sum = topography[x][y]
     
-    avrg = sum / sect_width*sect_height
+    avrg = topography_sum / sect_width*sect_height
     
     # Biome Rule: If average height of sector is below 151, the biome is set to 'Sea'
     # Otherwise, get one of 4 different biomes base of stuff
@@ -108,4 +107,12 @@ def roofRule(tile, biome):
 
 
 
- 
+
+
+
+
+
+
+
+
+

@@ -67,6 +67,7 @@ class Designer(threading.Thread):
 			for x in range(3):
 				for y in range(3):
 					lvl.newSector(x,y)
+					lvl.saveSector(x,y)
 		
 	
 	def CreateWorld(self):

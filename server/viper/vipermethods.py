@@ -111,7 +111,7 @@ def GenerateTopography(level_data, base_map, biome_map, out_file):
 
 
 def TestTopographyFile(tp_file):
-	print('Testing topography file...')
+	print('Testing topography %s' % tp_file)
 	
 	# Data reading
 	with open(tp_file, 'rb') as level:
@@ -150,18 +150,12 @@ def TestTopographyFile(tp_file):
 				yOff += sect_height
 			xOff += sect_width
 	
-	# Output
-	#print('Seed: %d' %  seed)
-	#print('X Sectors: %d' % max_xSec)
-	#print('Y Sectors: %d' % max_ySec)
-	#print('Sector Width: %d' % sect_width)
-	#print('Sector Height: %d' % sect_height)
-	
-	img_name = tp_file.strip('.dat') + '.png'
+	img_name = tp_file.rstrip('dat') + 'png'
 	img.save(img_name)
+	print('Results written to %s' % img_name)
 
 
-def LoadStoredSector(file_path):
+def LoadStoredSector(file_path): # TODO: IMPLEMENT
 	return {'biome':0, 'owner':'Nature', 'width':32, 'height':32, 'ground':[], 'floor':[], 'walls':[], 'roof':[], 'objects':[], 'entities':[] }
 
 
@@ -184,31 +178,24 @@ def ReadTopographyAt(file_path, d_xSect, d_ySect):
 		# Prepare grid
 		topography = grid2D(sect_width, sect_height, 0)
 		
-		print('Debugging %d %d' % (d_xSect, d_ySect) )
-		
 		# Calculates the ammount of bytes in a sector, including the biome byte
 		bytes_per_sect = (sect_width*sect_height) + 1
-		print('Bytes per sector: %d' % bytes_per_sect)
 		
-		# Calculates how much bytes all the sectors will cause to be skipped
+		# Now much sectors in the offset
 		skip_for_x = (bytes_per_sect*(d_xSect)*max_ySect)
 		if skip_for_x < 0: skip_for_x = 0
-		
 		skip_for_y = d_ySect*bytes_per_sect
 		if skip_for_y < 0: skip_for_y = 0
-		
 		sectors_offset = skip_for_x + skip_for_y
-		
-		print('Sector offset: %d' % sectors_offset)
 		
 		# Sums base and sectors offset for the effective offset
 		offset = base_offset + sectors_offset
-		print('Effective offset: %d' % offset)
 		
 		# Get the sector base biome
 		tpf.seek(offset)
 		biome = int.from_bytes(tpf.read(1), sys.byteorder)
 		
+		# Read all the sector and map it to the prepared grid
 		for x in range(sect_width):
 			for y in range(sect_height):
 				val = int.from_bytes(tpf.read(1), sys.byteorder)

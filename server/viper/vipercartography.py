@@ -13,10 +13,10 @@ class LandLevel():
         self.sectors = grid2D(self.xSec, self.ySec, None)
     
     def saveSector(self, x, y):
-        file_name = u'%s/level-%d-%d.gz' % (self.path, x, y)
+        file_name = u'%s/level-%d-%d.txt' % (self.path, x, y)
         biome = self.sectors[x][y].biome
         owner = self.sectors[x][y].owner
-        data_str = u'%s\n%s\nx y\n' % (biome, owner, x, y)
+        data_str = u'%s\n%s\n%d %d\n' % (biome, owner, x, y)
         data_str += 'data_map ground\n'
         data_str += gridToStr(self.sectors[x][y].ground_map)
         data_str += 'data_map floor\n'
@@ -30,8 +30,8 @@ class LandLevel():
     
     def newSector(self, xSect, ySect):
         topography, biome = ReadTopographyAt(self.topo_path, xSect, ySect)
-        #self.sectors[xSect][ySect] = Sector()
-        #self.sectors[xSect][ySect].Generate(topography)
+        self.sectors[xSect][ySect] = Sector()
+        self.sectors[xSect][ySect].Generate(topography, biome, WORLDS[self.wid]['generator'])
         TestReadSectorTopography(topography, biome, self.path, xSect, ySect)
 
 
@@ -46,10 +46,10 @@ class Sector():
             self.ent = []
         else: self.Load(file)
     
-    def Generate(self, topography, generator):
+    def Generate(self, topography, biome, generator):
         # Import the given script/module
         gen = importlib.import_module(generator)
-        sector_data = gen.GenerateTerrain(topography)
+        sector_data = gen.GenerateTerrain(topography, biome)
         self.ground_map = sector_data['ground']
         self.floor_map = sector_data['floor']
         self.wall_map = sector_data['walls']

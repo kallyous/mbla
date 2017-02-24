@@ -15,7 +15,7 @@ limitations under the License. """
 import os, sys
 SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
 GAME_HOME = SERVER_HOME.rstrip('/server')
-SCRIPTS_PATH = '%s/assets/scripts' % GAME_HOME
+SCRIPTS_PATH = '%s/assets/scripts/worldgen' % GAME_HOME
 sys.path.append(SERVER_HOME)
 sys.path.append(SCRIPTS_PATH) 
 
