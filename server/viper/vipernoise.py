@@ -10,7 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License. """
 
 import random
-from viper.viperconf import *
+from viper.vipermethods import grid2D, Interpolate
 
 
 def WhiteNoise(w, h, s):

@@ -4,6 +4,9 @@ assets/img
 server/worlds
 tools/pnv3/*.png
 tools/pnv3/*.txt
+temp/
+.pydevproject
+.settings/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

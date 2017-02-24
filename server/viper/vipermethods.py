@@ -9,21 +9,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-import builtins, types, sys
+import sys
 from PIL import Image
 
-BUFSIZE = 4096
-SECTOR_SIZE = 32
-
-builtins.CONF = {}
-builtins.CONF['sector_width'] = SECTOR_SIZE
-builtins.CONF['sector_height'] = SECTOR_SIZE
 
 def treatData(data):
+	try: val = int(data)
+	except: pass
+	else: return data
+	
+	try: val = float(data)
+	except: pass
+	else: return val
+	
+	try: val = data.lower().strip()
+	except: pass
+	else:
+		if val == 'true': return True
+		if val == 'false': return False
+	
 	return data
+	
 
 def bubbleSort(data, val):
-	# Bubble Algorithm
 	for i in range(len(data)-1):
 		if data[i][val] > data[i+1][val]:
 			temp = data[i+1]
@@ -63,8 +71,6 @@ def gridToStr(g):
 	return data
 
 def GenerateTopography(level_data, base_map, biome_map, out_file):
-	# Debug purmoses
-	
 	b_seed = level_data['seed'].to_bytes(8, sys.byteorder)
 	
 	world_xSect = len(biome_map)
@@ -148,19 +154,14 @@ def TestTopographyFile(tp_file):
 	
 	img_name = tp_file.strip('.dat') + '.png'
 	img.save(img_name)
-	
-	
 
 
+def LoadStoredSector(file_path):
+	return {'biome':0, 'owner':'Nature', 'width':32, 'height':32, 'ground':[], 'floor':[], 'walls':[], 'roof':[], 'objects':[], 'entities':[] }
 
 
-
-
-
-
-
-
-
-
+def ReadTopographyAt(file_path, xSect, ySect):
+	with open(file_path, 'rb') as tpf:
+		pass
 
 
