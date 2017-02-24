@@ -29,7 +29,7 @@ def treatData(data):
 		if val == 'false': return False
 	
 	return data
-	
+
 
 def bubbleSort(data, val):
 	for i in range(len(data)-1):
@@ -38,6 +38,7 @@ def bubbleSort(data, val):
 			data[i+1] = data[i]
 			data[i] = temp
 	return data
+
 
 def grid2D(w, h, d=0.0):
 	g = []
@@ -50,6 +51,7 @@ def grid2D(w, h, d=0.0):
 def Interpolate(a, b, f):
 	return a*(1-f) + f*b
 
+
 def printImg(data, name):
 	w = len(data)
 	h = len(data[0])
@@ -60,6 +62,7 @@ def printImg(data, name):
 			img.putpixel( (x,y), (0,0,blue) )
 	img.save(name, 'PNG')
 
+
 def gridToStr(g):
 	w = len(g)
 	h = len(g[0])
@@ -69,6 +72,7 @@ def gridToStr(g):
 		data = data.rstrip()
 		data = data + '\n'
 	return data
+
 
 def GenerateTopography(level_data, base_map, biome_map, out_file):
 	b_seed = level_data['seed'].to_bytes(8, sys.byteorder)
@@ -104,6 +108,7 @@ def GenerateTopography(level_data, base_map, biome_map, out_file):
 						file.write( tile_height.to_bytes(1, sys.byteorder) )
 				yOff += sect_height
 			xOff += sect_width
+
 
 def TestTopographyFile(tp_file):
 	print('Testing topography file...')
@@ -146,11 +151,11 @@ def TestTopographyFile(tp_file):
 			xOff += sect_width
 	
 	# Output
-	print('Seed: %d' %  seed)
-	print('X Sectors: %d' % max_xSec)
-	print('Y Sectors: %d' % max_ySec)
-	print('Sector Width: %d' % sect_width)
-	print('Sector Height: %d' % sect_height)
+	#print('Seed: %d' %  seed)
+	#print('X Sectors: %d' % max_xSec)
+	#print('Y Sectors: %d' % max_ySec)
+	#print('Sector Width: %d' % sect_width)
+	#print('Sector Height: %d' % sect_height)
 	
 	img_name = tp_file.strip('.dat') + '.png'
 	img.save(img_name)
@@ -160,8 +165,93 @@ def LoadStoredSector(file_path):
 	return {'biome':0, 'owner':'Nature', 'width':32, 'height':32, 'ground':[], 'floor':[], 'walls':[], 'roof':[], 'objects':[], 'entities':[] }
 
 
-def ReadTopographyAt(file_path, xSect, ySect):
+def ReadTopographyAt(file_path, d_xSect, d_ySect):
+	# d_ stands for 'desired_'
 	with open(file_path, 'rb') as tpf:
-		pass
+		# This is the amount of bytes the topography file currently uses
+		base_offset = 40
+		# First 8 bytes store the seed
+		seed = int.from_bytes(tpf.read(8), sys.byteorder)
+		# Next 8 bytes are the maximum X sector
+		max_xSect = int.from_bytes(tpf.read(8), sys.byteorder)
+		# Next 8 bytes are the maximum Y sector
+		max_ySect = int.from_bytes(tpf.read(8), sys.byteorder) 
+		# Next 8 bytes are the width of a sector
+		sect_width = int.from_bytes(tpf.read(8), sys.byteorder)
+		# Next 8 bytes are the height of a sector
+		sect_height = int.from_bytes(tpf.read(8), sys.byteorder)
+		
+		# Prepare grid
+		topography = grid2D(sect_width, sect_height, 0)
+		
+		print('Debugging %d %d' % (d_xSect, d_ySect) )
+		
+		# Calculates the ammount of bytes in a sector, including the biome byte
+		bytes_per_sect = (sect_width*sect_height) + 1
+		print('Bytes per sector: %d' % bytes_per_sect)
+		
+		# Calculates how much bytes all the sectors will cause to be skipped
+		skip_for_x = (bytes_per_sect*(d_xSect)*max_ySect)
+		if skip_for_x < 0: skip_for_x = 0
+		
+		skip_for_y = d_ySect*bytes_per_sect
+		if skip_for_y < 0: skip_for_y = 0
+		
+		sectors_offset = skip_for_x + skip_for_y
+		
+		print('Sector offset: %d' % sectors_offset)
+		
+		# Sums base and sectors offset for the effective offset
+		offset = base_offset + sectors_offset
+		print('Effective offset: %d' % offset)
+		
+		# Get the sector base biome
+		tpf.seek(offset)
+		biome = int.from_bytes(tpf.read(1), sys.byteorder)
+		
+		for x in range(sect_width):
+			for y in range(sect_height):
+				val = int.from_bytes(tpf.read(1), sys.byteorder)
+				topography[x][y] = val
+	
+	# Return a tuple with the read topography and base biome
+	return (topography, biome)
+
+
+def TestReadSectorTopography(topography, biome, lvl_path, xSect, ySect):
+	width = len(topography)
+	height = len(topography[0])
+	
+	img = Image.new('RGB', (width,height) )
+	
+	for x in range(width):
+		for y in range(height):
+			img.putpixel((x,y), (0, topography[x][y], 0) )
+	
+	img.save('%s/sect_%d_%d_topography_b%d.png' % (lvl_path, xSect, ySect, biome) )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

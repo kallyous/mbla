@@ -1,7 +1,7 @@
 { "server_name":"The Bug Lands",
   "worlds_path":"worlds",
   "worlds":[
-    { "id": 0,
+    { "id": 2,
       "name":"Surface",
       "type":"overworld",
       "above":"Sky",
@@ -11,6 +11,28 @@
       "levels": 1,
       "generator":"gen_surface",
       "noise":{"seed": 7, "oct": 5, "amp": 1.0, "pers": 0.5}
+    },
+    { "id": 0,
+      "name":"Astral",
+      "type":"overworld",
+      "above":"",
+      "below":"",
+      "xSec": 10,
+      "ySec": 5,
+      "levels": 2,
+      "generator":"gen_surface",
+      "noise":{"seed": 8, "oct": 5, "amp": 1.0, "pers": 0.5}
+    },
+    { "id": 1,
+      "name":"Sky",
+      "type":"overworld",
+      "above":"",
+      "below":"Surface",
+      "xSec": 8,
+      "ySec": 4,
+      "levels": 1,
+      "generator":"gen_surface",
+      "noise":{"seed": 6, "oct": 5, "amp": 1.0, "pers": 0.5}
     }
   ]
 }

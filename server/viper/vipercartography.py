@@ -1,6 +1,6 @@
 import importlib
 from viper.__init__ import WORLDS
-from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector
+from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector, TestReadSectorTopography
 
 class LandLevel():
     def __init__(self, wid, lvl):
@@ -29,9 +29,10 @@ class LandLevel():
             sector_file.write(data_str)
     
     def newSector(self, xSect, ySect):
-        topography = ReadTopographyAt(self.topo_path, xSect, ySect)
-        self.sectors[xSect][ySect] = Sector()
-        self.sectors[xSect][ySect].Generate(topography)
+        topography, biome = ReadTopographyAt(self.topo_path, xSect, ySect)
+        #self.sectors[xSect][ySect] = Sector()
+        #self.sectors[xSect][ySect].Generate(topography)
+        TestReadSectorTopography(topography, biome, self.path, xSect, ySect)
 
 
 class Sector():
