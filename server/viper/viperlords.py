@@ -15,7 +15,6 @@ from viper.vipercartography import LandLevel
 from viper.vipernoise import WhiteNoise, PerlinNoise
 from viper.vipermethods import printImg, GenerateTopography, TestTopographyFile
 
-LEVELS = []
 
 class Master(threading.Thread):
 	def __init__(self, wid):
@@ -60,27 +59,35 @@ class Designer(threading.Thread):
 	def __init__(self, wid):
 		threading.Thread.__init__(self, name='%s Designer' % WORLDS[wid]['name'])
 		self.wid = wid
+		WORLDS[self.wid]['levels'] = []
 	
 	def run(self):
 		self.CreateWorld()
-		for lvl in LEVELS:
-			for x in range(3):
-				for y in range(3):
-					lvl.newSector(x,y)
-					lvl.saveSector(x,y)
-		
+		for i in range(WORLDS[self.wid]['level-count']):
+			if not WORLDS[self.wid]['levels'][i].loadSector(0,0):
+				WORLDS[self.wid]['levels'][i].newSector(0,0)
 	
 	def CreateWorld(self):
-		for level in range(WORLDS[self.wid]['levels']):
-			lvl_path = u'%s/%d' % (WORLDS[self.wid]['path'], level)
-			if not os.path.isdir(lvl_path): os.makedirs(lvl_path)
-			if not self.levelExists(lvl_path): self.CreateLevel(level)
+		for level in range(WORLDS[self.wid]['level-count']):
+			if self.levelExists(level):
+				print('%s loading level %d...' % (self.name, level) )
+				self.LoadLevel(level)
+			else:
+				print('%s creating level %d...' % (self.name, level) )
+				self.CreateLevel(level)
 	
-	def levelExists(self, lvl_path):
-		if not os.path.isdir(lvl_path): return False
-		if not os.path.isfile('%s/level-meta.dat' % lvl_path): return False
-		if not os.path.isfile('%s/level-0-0.gz' % lvl_path): return False
-		return True
+	def levelExists(self, level):
+		lvl_meta = u'%s/%d/level-meta.dat' % (WORLDS[self.wid]['path'], level)
+		if os.path.isfile(lvl_meta): return True
+		else: return False
+	
+	def LoadLevel(self, level):
+		lvl_path = u'%s/%d' % (WORLDS[self.wid]['path'], level)
+		lvl_topography = u'%s/level-meta.dat' % lvl_path
+		if os.path.isfile(lvl_topography):
+			WORLDS[self.wid]['levels'].append( LandLevel(self.wid, level) )
+		else:
+			print('CRITICAL: %s does not exists!!!' % lvl_topography)
 	
 	def CreateLevel(self, level):
 		# Name things
@@ -116,12 +123,10 @@ class Designer(threading.Thread):
 		GenerateTopography(lvl_meta, tp_pn, bm_pn, lvl_topography)
 		TestTopographyFile(lvl_topography)
 		# Put result in a visible place
-		LEVELS.append( LandLevel( self.wid, level ) )
-		# Generate the sector 0 0
-		self.GenerateSector(level, 0, 0)
+		WORLDS[self.wid]['levels'].append( LandLevel( self.wid, level ) )
 	
 	def GenerateSector(self, level, xSect, ySect):
-		LEVELS[level].newSector(xSect, ySect)
+		WORLDS[self.wid]['levels'][level].newSector(xSect, ySect)
 		
 
 

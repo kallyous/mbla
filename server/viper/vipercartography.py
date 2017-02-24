@@ -12,6 +12,22 @@ class LandLevel():
         self.topo_path = u'%s/level-meta.dat' % self.path
         self.sectors = grid2D(self.xSec, self.ySec, None)
     
+    def loadSector(self, x, y):
+        sector_file = u'%s/level-%d-%d.txt' % (self.path, x, y)
+        data_str = ''
+        try:
+            with open(sector_file, 'r') as sf:
+                for line in sf:
+                    data_str += line
+        except:
+            print('%s sector %d %d do not exists.' % (self.name, x, y) )
+            return False
+        else:
+            print('Loaded %s sector %d %d:' % (self.name, x, y) )
+            print(data_str)
+            return True           
+
+
     def saveSector(self, x, y):
         file_name = u'%s/level-%d-%d.txt' % (self.path, x, y)
         biome = self.sectors[x][y].biome
@@ -32,7 +48,8 @@ class LandLevel():
         topography, biome = ReadTopographyAt(self.topo_path, xSect, ySect)
         self.sectors[xSect][ySect] = Sector()
         self.sectors[xSect][ySect].Generate(topography, biome, WORLDS[self.wid]['generator'])
-        TestReadSectorTopography(topography, biome, self.path, xSect, ySect)
+        self.saveSector(xSect, ySect)
+        #TestReadSectorTopography(topography, biome, self.path, xSect, ySect)
 
 
 class Sector():
