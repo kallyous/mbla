@@ -13,9 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License. """
 
 import os, sys
-GAME_HOME = SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
 
+GAME_HOME = SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
 SCRIPTS_PATH = '%s/assets/scripts/worldgen' % GAME_HOME
+
 sys.path.append(SERVER_HOME)
 sys.path.append(SCRIPTS_PATH) 
 

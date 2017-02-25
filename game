@@ -13,10 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License. """
 
 import os, sys
-from snek.client import GameClient
+from snek.snekclient import GameClient
 
-GAME_HOME = os.path.dirname( os.path.realpath(__file__) )
-SERVER_HOME = u'%s/server' % GAME_HOME
+GAME_HOME = SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
+
+sys.path.append(GAME_HOME)
+
 
 game = GameClient()
 game.configure('game_home', GAME_HOME)

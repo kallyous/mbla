@@ -35,12 +35,13 @@ class Maker(threading.Thread):
 			try: (data, addr) = self.service_sock.recvfrom(BUFSIZE)
 			except BlockingIOError: pass
 			else:
-				print(data.decode('utf-8'))
-				print(addr)
 				client_info = data.decode('utf-8').split()
 				for i in range(len(client_info)):
 					client_info[i] = treatData(client_info[i])
-				self.temp_sock.sendto('I see you.'.encode('utf-8'), (addr[0], client_info[0]) )
+				print('New connection: %s' % data.decode('utf-8'))
+				answer = u'%s %d' % (SERVER_ADDR, WORLDS[2]['listen-port'])
+				try: self.temp_sock.sendto(answer.encode('utf-8'), (addr[0], client_info[0]) )
+				except: pass
 			time.sleep(1)
 		
 	

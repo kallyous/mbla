@@ -16,5 +16,8 @@ SECTOR_SIZE = 32
 SECTOR_WIDTH = SECTOR_SIZE
 SECTOR_HEIGHT = SECTOR_SIZE
 BUFSIZE = 4096
-CONF = {'sec_w':SECTOR_WIDTH, 'sec_h':SECTOR_HEIGHT, 'server-port':8732}
-
+CONF = {
+    'sec_w':SECTOR_WIDTH,
+    'sec_h':SECTOR_HEIGHT,
+    'maker-port':8732
+    }

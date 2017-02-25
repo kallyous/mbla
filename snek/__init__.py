@@ -9,8 +9,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-GAME_HOME = u''
-SERVER_HOME = u''
+GAME_HOME = None
+LOC_SERV_HOME = None
+EFF_REM_SERV = None
 BUFSIZE = 4096
 CONF = {'data_port':8721, 'graphics_port':8722, 'remote_server_ip': '46.101.28.141', 'remove_server_port':8732}
-
