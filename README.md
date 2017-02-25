@@ -1,4 +1,4 @@
-# Mythical Byte Lands Alpha
+# Mythical Byte Lands (pre)Alpha
 
 A 2D multiplayer top-down survival RPG.
 Very early alpha.
