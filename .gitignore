@@ -1,7 +1,7 @@
 # Custom stuff
 assets/img
 .project
-server/worlds
+worlds/
 tools/pnv3/*.png
 tools/pnv3/*.txt
 temp/

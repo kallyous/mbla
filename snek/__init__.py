@@ -11,16 +11,6 @@ limitations under the License. """
 
 GAME_HOME = u''
 SERVER_HOME = u''
-WORLDS = []
-SECTOR_SIZE = 32
-SECTOR_WIDTH = SECTOR_SIZE
-SECTOR_HEIGHT = SECTOR_SIZE
 BUFSIZE = 4096
-CONF = {'sec_w':SECTOR_WIDTH, 'sec_h':SECTOR_HEIGHT}
-
-def Setup(game_home, server_home):
-    global GAME_HOME
-    global SERVER_HOME
-    GAME_HOME = game_home
-    SERVER_HOME = server_home
+CONF = {'data_port':8721, 'graphics_port':8722, 'remote_server_ip': '46.101.28.141', 'remove_server_port':8732}
 

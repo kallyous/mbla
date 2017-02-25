@@ -10,13 +10,13 @@ See the License for the specific language governing permissions and
 limitations under the License. """
 
 import sys
-from PIL import Image
+#from PIL import Image
 
 
 def treatData(data):
 	try: val = int(data)
 	except: pass
-	else: return data
+	else: return val
 	
 	try: val = float(data)
 	except: pass
@@ -51,7 +51,7 @@ def grid2D(w, h, d=0.0):
 def Interpolate(a, b, f):
 	return a*(1-f) + f*b
 
-
+"""
 def printImg(data, name):
 	w = len(data)
 	h = len(data[0])
@@ -61,7 +61,7 @@ def printImg(data, name):
 			blue = int( 256 * data[x][y] )
 			img.putpixel( (x,y), (0,0,blue) )
 	img.save(name, 'PNG')
-
+"""
 
 def gridToStr(g):
 	w = len(g)
@@ -109,7 +109,7 @@ def GenerateTopography(level_data, base_map, biome_map, out_file):
 				yOff += sect_height
 			xOff += sect_width
 
-
+"""
 def TestTopographyFile(tp_file):
 	print('Testing topography %s' % tp_file)
 	
@@ -153,7 +153,7 @@ def TestTopographyFile(tp_file):
 	img_name = tp_file.rstrip('dat') + 'png'
 	img.save(img_name)
 	print('Results written to %s' % img_name)
-
+"""
 
 def LoadStoredSector(file_path): # TODO: IMPLEMENT
 	return {'biome':0, 'owner':'Nature', 'width':32, 'height':32, 'ground':[], 'floor':[], 'walls':[], 'roof':[], 'objects':[], 'entities':[] }
@@ -204,7 +204,7 @@ def ReadTopographyAt(file_path, d_xSect, d_ySect):
 	# Return a tuple with the read topography and base biome
 	return (topography, biome)
 
-
+"""
 def TestReadSectorTopography(topography, biome, lvl_path, xSect, ySect):
 	width = len(topography)
 	height = len(topography[0])
@@ -216,7 +216,7 @@ def TestReadSectorTopography(topography, biome, lvl_path, xSect, ySect):
 			img.putpixel((x,y), (0, topography[x][y], 0) )
 	
 	img.save('%s/sect_%d_%d_topography_b%d.png' % (lvl_path, xSect, ySect, biome) )
-
+"""
 
 
 

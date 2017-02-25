@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 """ Copyright 2017 Kallyous Caos Negro
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,19 +9,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-import pyglet
+GAME_HOME = u''
+SERVER_HOME = u''
+WORLDS = []
+SECTOR_SIZE = 32
+SECTOR_WIDTH = SECTOR_SIZE
+SECTOR_HEIGHT = SECTOR_SIZE
+BUFSIZE = 4096
+CONF = {'sec_w':SECTOR_WIDTH, 'sec_h':SECTOR_HEIGHT, 'server-port':8732}
 
-window = pyglet.window.Window()
-
-label = pyglet.text.Label(	'Hello World',
-							font_name='Times New Roman',
-							font_size=36,
-							x=window.width//2, y=window.height//2,
-							anchor_x='center', anchor_y='center')
-
-@window.event
-def on_draw():
-	window.clear()
-	label.draw()
-
-pyglet.app.run()

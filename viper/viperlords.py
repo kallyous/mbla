@@ -13,15 +13,20 @@ import threading, os, time
 from viper.__init__ import WORLDS, CONF
 from viper.vipercartography import LandLevel
 from viper.vipernoise import WhiteNoise, PerlinNoise
-from viper.vipermethods import printImg, GenerateTopography, TestTopographyFile
-
+#from viper.vipermethods import printImg, GenerateTopography, TestTopographyFile
+from viper.vipermethods import GenerateTopography
 
 class Master(threading.Thread):
 	def __init__(self, wid):
 		threading.Thread.__init__(self, name='%s Master' % WORLDS[wid]['name'])
 		self.wid = wid
-		WORLDS[wid]['path'] = u'%s/%s' % (CONF['worlds_path'], wid)
+		WORLDS[self.wid]['path'] = u'%s/%s' % (CONF['worlds_path'], wid)
 		if not os.path.isdir(WORLDS[wid]['path']): os.makedirs(WORLDS[wid]['path'])
+		# Each player entry shall be its ID
+		# A player is a common entity, like any NPC and is treated with the same mechanics.
+		# Only difference is when a player take action, the director apply it to the
+		# entity with the player's ID on the players dictionary.
+		WORLDS[self.wid]['players'] = {}
 	
 	def run(self):
 		last_time = time.time()
@@ -113,15 +118,15 @@ class Designer(threading.Thread):
 		tp_wn = WhiteNoise(width, height, seed)
 		tp_pn = PerlinNoise(tp_wn, octaves, amplitude=amp, persistance=pers)
 		# debug
-		printImg(tp_pn,'%s/ground.png' % lvl_path )
-		printImg(bm_pn,'%s/biomes.png' % lvl_path )
+		#printImg(tp_pn,'%s/ground.png' % lvl_path )
+		#printImg(bm_pn,'%s/biomes.png' % lvl_path )
 		# Test topography generation
 		lvl_meta = {}
 		lvl_meta['seed'] = seed
 		lvl_meta['sect_width'] = CONF['sec_w']
 		lvl_meta['sect_height'] = CONF['sec_h']
 		GenerateTopography(lvl_meta, tp_pn, bm_pn, lvl_topography)
-		TestTopographyFile(lvl_topography)
+		#TestTopographyFile(lvl_topography)
 		# Put result in a visible place
 		WORLDS[self.wid]['levels'].append( LandLevel( self.wid, level ) )
 	

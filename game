@@ -13,17 +13,33 @@ See the License for the specific language governing permissions and
 limitations under the License. """
 
 import os, sys
-SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
-GAME_HOME = SERVER_HOME.rstrip('/server')
-SCRIPTS_PATH = '%s/assets/scripts/worldgen' % GAME_HOME
-sys.path.append(SERVER_HOME)
-sys.path.append(SCRIPTS_PATH) 
+from snek.client import GameClient
 
-import viper
-from viper.vipermaker import Maker
+GAME_HOME = os.path.dirname( os.path.realpath(__file__) )
+SERVER_HOME = u'%s/server' % GAME_HOME
+
+game = GameClient()
+game.configure('game_home', GAME_HOME)
+game.configure('server_home', SERVER_HOME)
+
+game.start()
 
 
-viper.Setup(GAME_HOME, SERVER_HOME)
-server = Maker()
-server.start()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

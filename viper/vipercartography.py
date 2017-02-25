@@ -1,6 +1,7 @@
 import importlib
 from viper.__init__ import WORLDS
-from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector, TestReadSectorTopography
+#from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector, TestReadSectorTopography
+from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector
 
 class LandLevel():
     def __init__(self, wid, lvl):
@@ -24,7 +25,6 @@ class LandLevel():
             return False
         else:
             print('Loaded %s sector %d %d:' % (self.name, x, y) )
-            print(data_str)
             return True           
 
 
