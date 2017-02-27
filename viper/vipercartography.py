@@ -1,15 +1,15 @@
-import importlib
-from viper.__init__ import WORLDS
-#from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector, TestReadSectorTopography
+import importlib, viper
 from viper.vipermethods import grid2D, gridToStr, ReadTopographyAt, LoadStoredSector
+if viper.DEBUG:
+    from viper.viperdebug import *
 
 class LandLevel():
     def __init__(self, wid, lvl):
         self.wid = wid
-        self.xSec = WORLDS[wid]['xSec']
-        self.ySec = WORLDS[wid]['ySec']
-        self.name = u'%s #%d' % (WORLDS[wid]['name'], lvl)
-        self.path = u'%s/%d' % (WORLDS[wid]['path'], lvl)
+        self.xSec = viper.WORLDS[wid]['xSec']
+        self.ySec = viper.WORLDS[wid]['ySec']
+        self.name = u'%s #%d' % (viper.WORLDS[wid]['name'], lvl)
+        self.path = u'%s/%d' % (viper.WORLDS[wid]['path'], lvl)
         self.topo_path = u'%s/level-meta.dat' % self.path
         self.sectors = grid2D(self.xSec, self.ySec, None)
     
@@ -47,7 +47,7 @@ class LandLevel():
     def newSector(self, xSect, ySect):
         topography, biome = ReadTopographyAt(self.topo_path, xSect, ySect)
         self.sectors[xSect][ySect] = Sector()
-        self.sectors[xSect][ySect].Generate(topography, biome, WORLDS[self.wid]['generator'])
+        self.sectors[xSect][ySect].Generate(topography, biome, viper.WORLDS[self.wid]['generator'])
         self.saveSector(xSect, ySect)
         #TestReadSectorTopography(topography, biome, self.path, xSect, ySect)
 

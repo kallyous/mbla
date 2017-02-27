@@ -12,17 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-import os, sys
+import os, sys, snek
 from snek.snekclient import GameClient
 
-GAME_HOME = SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
+snek.GAME_HOME = os.path.dirname( os.path.realpath(__file__) )
+snek.SCRIPTS_PATH = u'%s/scripts' % snek.GAME_HOME
 
-sys.path.append(GAME_HOME)
-
+sys.path.append(snek.GAME_HOME)
+sys.path.append(snek.SCRIPTS_PATH)
 
 game = GameClient()
-game.configure('game_home', GAME_HOME)
-game.configure('server_home', SERVER_HOME)
 
 game.start()
 

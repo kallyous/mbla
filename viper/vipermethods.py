@@ -9,8 +9,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-import sys
-#from PIL import Image
+import sys, sqlite3, viper
+from pprint import pprint
+if viper.DEBUG: from viper.viperdebug import *
 
 
 def treatData(data):
@@ -48,17 +49,6 @@ def grid2D(w, h, d=0.0):
 def Interpolate(a, b, f):
 	return a*(1-f) + f*b
 
-"""
-def printImg(data, name):
-	w = len(data)
-	h = len(data[0])
-	img = Image.new('RGB', (w, h) )
-	for x in range(w):
-		for y in range(h):
-			blue = int( 256 * data[x][y] )
-			img.putpixel( (x,y), (0,0,blue) )
-	img.save(name, 'PNG')
-"""
 
 def gridToStr(g):
 	w = len(g)
@@ -106,51 +96,6 @@ def GenerateTopography(level_data, base_map, biome_map, out_file):
 				yOff += sect_height
 			xOff += sect_width
 
-"""
-def TestTopographyFile(tp_file):
-	print('Testing topography %s' % tp_file)
-	
-	# Data reading
-	with open(tp_file, 'rb') as level:
-		# Read seed, 8 bytes
-		b_seed = level.read(8)
-		seed = int.from_bytes(b_seed, sys.byteorder)
-		# Read max X sectors, 8 bytes
-		b_max_xSec = level.read(8)
-		max_xSec = int.from_bytes(b_max_xSec, sys.byteorder)
-		# read max Y sectors, 8 bytes
-		b_max_ySec = level.read(8)
-		max_ySec = int.from_bytes(b_max_ySec, sys.byteorder)
-		# read sector width, 8 bytes
-		b_sect_width = level.read(8)
-		sect_width = int.from_bytes(b_sect_width, sys.byteorder)
-		# read sector height, 8 bytes
-		b_sect_height = level.read(8)
-		sect_height = int.from_bytes(b_sect_height, sys.byteorder)
-		
-		
-		img_width = max_xSec * sect_width
-		img_height = max_ySec * sect_height
-		img = Image.new('RGB', (img_width, img_height) )
-		
-		xOff = 0
-		for xSec in range(max_xSec):
-			yOff = 0
-			for ySec in range(max_ySec):
-				b_red = level.read(1)
-				red = int.from_bytes(b_red, sys.byteorder)
-				for x in range(sect_width):
-					for y in range(sect_height):
-						b_green = level.read(1)
-						green = int.from_bytes(b_green, sys.byteorder)
-						img.putpixel( (x+xOff,y+yOff), (red, green, 0) )
-				yOff += sect_height
-			xOff += sect_width
-	
-	img_name = tp_file.rstrip('dat') + 'png'
-	img.save(img_name)
-	print('Results written to %s' % img_name)
-"""
 
 def LoadStoredSector(file_path): # TODO: IMPLEMENT
 	return {'biome':0, 'owner':'Nature', 'width':32, 'height':32, 'ground':[], 'floor':[], 'walls':[], 'roof':[], 'objects':[], 'entities':[] }
@@ -201,22 +146,66 @@ def ReadTopographyAt(file_path, d_xSect, d_ySect):
 	# Return a tuple with the read topography and base biome
 	return (topography, biome)
 
-"""
-def TestReadSectorTopography(topography, biome, lvl_path, xSect, ySect):
-	width = len(topography)
-	height = len(topography[0])
-	
-	img = Image.new('RGB', (width,height) )
-	
-	for x in range(width):
-		for y in range(height):
-			img.putpixel((x,y), (0, topography[x][y], 0) )
-	
-	img.save('%s/sect_%d_%d_topography_b%d.png' % (lvl_path, xSect, ySect, biome) )
-"""
 
+def AuthUser(username, password, email='unknown'):
+	db_path = u'%s/data/%s' % (viper.SERVER_HOME, viper.CONF['player-db'])
+	print(u'\nOpenning player database on %s\n' % db_path)
+	db_conn = sqlite3.connect(db_path)
+	cursor = db_conn.cursor()
+	query_select = u'SELECT * FROM player WHERE username=?;'
+	query_insert = u'INSERT INTO player (username, email, password) VALUES (?, ?, ?)'
+	cursor.execute(query_select, (username,))
+	result = cursor.fetchall()
+	print(u'AuthUser received:\n\tusername = %s\n\tpassword = %s\n\temail = %s' % (username, password, email) )
+	if len(result) > 0:
+		curr_pass = u'%s' % str(result[0][16]).strip()
+		recv_pass = u'%s' % str(password).strip()
+		if curr_pass == recv_pass:
+			return True, 'Player authenticated', ParsePlayerDataFromDB(result[0])
+		else:
+			return False, 'Wrong password', {}
+	else:
+		cursor.execute(query_insert, (username, password, email) )
+		db_conn.commit()
+		cursor.execute(query_select, (username,))
+		result = cursor.fetchall()
+		if len(result) > 0:
+			return True, 'New player added', ParsePlayerDataFromDB(result[0])
+		else:
+			return False, 'Unknown error ocurred', None
 
+def LoadPlayerFromDB(player_id):
+	pid = treatData(player_id)
+	db_conn = sqlite3.connect('%s/data/%s' % (viper.SERVER_HOME, viper.CONF['player-db']) )
+	cursor = db_conn.Cursor()
+	query_select = u'SELECT * FROM player WHERE id=?";'
+	cursor.execute(query_select, (pid,) )
+	result = cursor.fetchall()
+	if len(result) > 0:
+		return ParsePlayerDataFromDB(result[0])
+	else:
+		return []
 
+def ParsePlayerDataFromDB(db_data):
+	player = {}
+	player['id'] = db_data[0]
+	player['name'] = db_data[1]
+	player['lvl'] = db_data[2]
+	player['exp'] = db_data[3]
+	player['class'] = db_data[4]
+	player['world'] = db_data[5]
+	player['wlvl'] = db_data[6]
+	player['x'] = db_data[7]
+	player['y'] = db_data[8]
+	player['z'] = db_data[9]
+	player['spawn_world'] = db_data[10]
+	player['spawn_wlvl'] = db_data[11]
+	player['spawn_x'] = db_data[12]
+	player['spawn_y'] = db_data[13]
+	player['spawn_z'] = db_data[14]
+	for n in player:
+		player[n] = treatData(player[n])
+	return player
 
 
 

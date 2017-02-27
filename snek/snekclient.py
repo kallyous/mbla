@@ -1,8 +1,8 @@
-import threading, socket, time, sys
-from snek.__init__ import CONF, GAME_HOME, LOC_SERV_HOME, BUFSIZE, EFF_REM_SERV
+import threading, socket, time, sys, snek
 from snek.snekmethods import treatData
 
 HOST_ADDR = '192.168.25.32'
+#HOST_ADDR = '192.168.0.4'
 
 class GameClient(threading.Thread):
     def __init__(self):
@@ -11,12 +11,12 @@ class GameClient(threading.Thread):
         self.sock_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_data = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_data.setblocking(False)
-        self.sock_data.bind( (HOST_ADDR, CONF['data_port']) )
+        self.sock_data.bind( (HOST_ADDR, snek.CONF['data_port']) )
         self.sock_graphics = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_graphics.setblocking(False)
-        self.sock_graphics.bind( (HOST_ADDR, CONF['graphics_port']) )
-        self.handshake = '%d %d' % (CONF['data_port'], CONF['graphics_port'])
-        self.rem_serv_info = (CONF['remote_server_ip'], CONF['remove_server_port'])
+        self.sock_graphics.bind( (HOST_ADDR, snek.CONF['graphics_port']) )
+        self.handshake = '%d %d' % (snek.CONF['data_port'], snek.CONF['graphics_port'])
+        self.rem_serv_info = (snek.CONF['remote_server_ip'], snek.CONF['remove_server_port'])
         self.online = False
     
     def run(self):
@@ -30,7 +30,7 @@ class GameClient(threading.Thread):
             login = input(u'\tUsername: ')
             password = input(u'\tPassword: ')
             if login != '' and password != '' and email != '':
-                handshake += u' %s %s %s' % (email, login, password)
+                handshake += u' %s %s %s' % (login, password, email)
                 print('\tSending ', end='', flush=False)
                 print(handshake, end='', flush=False)
                 print(' to ', end='', flush=False)
@@ -43,35 +43,41 @@ class GameClient(threading.Thread):
             for i in range(10):
                 for j in range(10):
                     time.sleep(1)
-                    try: (data,addr) = self.sock_data.recvfrom(BUFSIZE)
+                    try: (data,addr) = self.sock_data.recvfrom(snek.BUFSIZE)
                     except BlockingIOError: pass
                     else:
-                        (serv_eff_addr, serv_eff_port) = data.decode('utf-8').split()
-                        EFF_REM_SERV = ( treatData(serv_eff_addr), treatData(serv_eff_port ) )
+                        answer = data.decode('utf-8')
+                        print('Server answer: %s' % answer)
+                        content = answer.split()
+                        if len(content) == 2:
+                            serv_eff_addr = content[0]
+                            serv_eff_port = treatData(content[1])
+                            self.id_hash = content[2]
+                        else: continue
+                        snek.EFF_REM_SERV = ( treatData(serv_eff_addr), treatData(serv_eff_port ) )
                         self.online = True
                         break
                     print(' %d' % (10 - j), end=u'', flush=True)
                 if self.online:
                     print('\n\tServer answered. We are online!')
                     print('\tConnected to ', end='')
-                    print(EFF_REM_SERV)
+                    print(snek.EFF_REM_SERV)
                     break
                 else:
-                    print('\n\tNo answer. Sending handshake again...', end='', flush=True)
+                    print('\n\tNo answer. Sending handshake again.\n\twaiting for the server...', end='', flush=True)
                     try: self.sock_out.sendto(handshake.encode('utf-8'), self.rem_serv_info )
                     except OSError:
-                        print('OS Error. Check your internet connection.')
-                        sys.exit(1)
-                    
+                        print('\n\tOS Error. Check your internet connection.')
+                        break
             
             # Game loop
             print('\n\nRunning...')
             while self.online:
                 # Receive game data from Herald
-                try: (game_data, herald) = self.sock_data.recvfrom(BUFSIZE)
+                try: (game_data, herald) = self.sock_data.recvfrom(snek.BUFSIZE)
                 except BlockingIOError: pass
                 # Receive graphic data from Artificer
-                try: (graphic_data, artificer) = self.sock_graphics.recvfrom(BUFSIZE)
+                try: (graphic_data, artificer) = self.sock_graphics.recvfrom(snek.BUFSIZE)
                 except BlockingIOError: pass
                 
                 # Display raw data for debug
@@ -80,7 +86,7 @@ class GameClient(threading.Thread):
                 try: print(graphic_data.decode('utf-8'))
                 except: pass
                 
-                # Pool player input
+                # Prepare player input
                 
                 # Send player actions to the server
                 # First line use:
@@ -88,20 +94,12 @@ class GameClient(threading.Thread):
                 #    afk - client detected the player is not giving input
                 #    off - player purposely left the game
                 # this may be usefull.
-                self.sock_out.sendto('online\n'.encode('utf-8'), self.rem_serv_info)
+                msg = u'%s\n' % self.id_hash # For identification
+                msg += u'KeyStrokeSequenceCompactedByTheClient\n' # For the director to process
+                msg += u'800 600' # Screen resolution. For sectors loading and graphics packing. Max 1920 1080.
+                self.sock_out.sendto(msg.encode('utf-8'), snek.EFF_REM_SERV)
                 
                 # Sleep a little
-                time.sleep(1)
-    
-    def configure(self, name, value):
-        global CONF
-        global GAME_HOME
-        global SERVER_HOME
-        if name == 'game_home':
-            GAME_HOME = value
-            return
-        if name == 'server_home':
-            SERVER_HOME = value
-        CONF[name] = value
-        return
+                time.sleep(2)
+
 

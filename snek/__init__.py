@@ -13,4 +13,11 @@ GAME_HOME = None
 LOC_SERV_HOME = None
 EFF_REM_SERV = None
 BUFSIZE = 4096
-CONF = {'data_port':8721, 'graphics_port':8722, 'remote_server_ip': '46.101.28.141', 'remove_server_port':8732}
+GLOB_SERV_ADDR = '46.101.28.141'
+GLOB_SERV_PORT = 8732
+CONF = {
+    'data_port':8721,
+    'graphics_port':8722,
+    'remote_server_ip': GLOB_SERV_ADDR,
+    'remove_server_port':GLOB_SERV_PORT
+    }

@@ -12,18 +12,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. """
 
-import os, sys
+import os, sys, viper
+from viper import vipermaker
 
-GAME_HOME = SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
-SCRIPTS_PATH = '%s/assets/scripts/worldgen' % GAME_HOME
+viper.GAME_HOME = os.path.dirname( os.path.realpath(__file__) )
+viper.SERVER_HOME = os.path.dirname( os.path.realpath(__file__) )
+viper.SCRIPTS_PATH = '%s/scripts/worldgen' % viper.GAME_HOME
 
-sys.path.append(SERVER_HOME)
-sys.path.append(SCRIPTS_PATH) 
+sys.path.append(viper.GAME_HOME)
+sys.path.append(viper.SCRIPTS_PATH)
 
-import viper
-from viper.vipermaker import Maker
+if len(sys.argv) > 1:
+    if sys.argv[1] == u'--debug': viper.DEBUG = True
 
-
-server = Maker()
+server = vipermaker.Maker()
 server.start()
 
