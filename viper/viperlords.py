@@ -28,6 +28,10 @@ class Master(threading.Thread):
 		# Only difference is when a player take action, the director apply it to the
 		# entity with the player's username on the players dictionary.
 		viper.WORLDS[self.wid]['players'] = {}
+		viper.WORLDS[self.wid]['lock-players'] = False
+		viper.WORLDS[self.wid]['lock-objects'] = False
+		viper.WORLDS[self.wid]['lock-entities'] = False
+		
 	
 	def run(self):
 		self.RaiseLords()
@@ -37,22 +41,30 @@ class Master(threading.Thread):
 			time.sleep(5)
 	
 	def RaiseLords(self):
-		self.Lords = {}
-		self.Lords['Designer'] = Designer(self.wid)
-		self.Lords['Courier'] = Courier(self.wid)
-		self.Lords['Gaia'] = Gaia(self.wid)
-		self.Lords['Ego'] = Ego(self.wid)
-		self.Lords['Director'] = Director(self.wid)
-		self.Lords['Arbiter'] = Arbiter(self.wid)
-		self.Lords['Artificer'] = Artificer(self.wid)
-		self.Lords['Herald'] = Herald(self.wid)
+		viper.WORLDS[self.wid]['lords'] = {}
+		viper.WORLDS[self.wid]['lords']['Designer'] = Designer(self.wid)
+		viper.WORLDS[self.wid]['lords']['Courier'] = Courier(self.wid)
+		viper.WORLDS[self.wid]['lords']['Gaia'] = Gaia(self.wid)
+		viper.WORLDS[self.wid]['lords']['Ego'] = Ego(self.wid)
+		viper.WORLDS[self.wid]['lords']['Director'] = Director(self.wid)
+		viper.WORLDS[self.wid]['lords']['Arbiter'] = Arbiter(self.wid)
+		viper.WORLDS[self.wid]['lords']['Artificer'] = Artificer(self.wid)
+		viper.WORLDS[self.wid]['lords']['Herald'] = Herald(self.wid)
 	
 	def LaunchLords(self):
-		for lord in self.Lords:
-			self.Lords[lord].start()
+		for lord in viper.WORLDS[self.wid]['lords']:
+			viper.WORLDS[self.wid]['lords'][lord].start()
 	
 	def addPlayer(self, player):
+		# Tells that is about to write into players data, so everybody should wait
+		viper.WORLDS[self.wid]['lock-players'] = True
+		# Waits until anybody reading players data finishes it's reading
+		while playerDataInUse(self.wid): time.sleep(1)
+		# Writes to players data
 		viper.WORLDS[self.wid]['players'][player['name']] = player
+		# Unlocks players data
+		viper.WORLDS[self.wid]['lock-players'] = False
+		# Debug output
 		print(u'%s added to [players]:' % self.name)
 		print(viper.WORLDS[self.wid]['players'][player['name']])
 
@@ -64,20 +76,32 @@ class Artificer(threading.Thread):
 		self.wid = wid
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.setblocking(False)
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
 		
 	def run(self):
 		while True:
-			for player in viper.WORLDS[self.wid]['players']:
-				world = viper.WORLDS[self.wid]['name']
-				level = viper.WORLDS[self.wid]['players'][player]['wlvl']
-				x = viper.WORLDS[self.wid]['players'][player]['x']
-				y = viper.WORLDS[self.wid]['players'][player]['y']
-				z = viper.WORLDS[self.wid]['players'][player]['z']
-				addr = viper.WORLDS[self.wid]['players'][player]['addr']
-				port = viper.WORLDS[self.wid]['players'][player]['graphics-port']
-				msg = u'You are in the %s #%d at x:%d y:%d z:%d ' % (world, level, x, y, z)
-				try: self.sock.sendto(msg.encode('utf-8'), (addr,port) )
-				except: print(u'%s output error.' % self.name)
+			# Check if players data is locked
+			if not viper.WORLDS[self.wid]['lock-players']:
+				# Lets other sknow that players data is being read
+				self.readingFromPlayers = True
+				# Copy from players data for processing
+				players_data = viper.WORLDS[self.wid]['players']
+				# Uses the data
+				for player in players_data:
+					world = viper.WORLDS[self.wid]['name']
+					level = players_data[player]['wlvl']
+					x = players_data[player]['x']
+					y = players_data[player]['y']
+					z = players_data[player]['z']
+					addr = players_data[player]['addr']
+					port = players_data[player]['graphics-port']
+					msg = u'You are in the %s #%d at x:%d y:%d z:%d ' % (world, level, x, y, z)
+					try: self.sock.sendto(msg.encode('utf-8'), (addr,port) )
+					except: print(u'%s output error.' % self.name)
+				# Releases players data for writing after copying it's contents
+				self.readingFromPlayers = False
 			time.sleep(1)
 
 
@@ -90,6 +114,9 @@ class Courier(threading.Thread):
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.setblocking(False)
 		self.sock.bind( (viper.SERVER_ADDR, viper.WORLDS[self.wid]['listen-port']) )
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
 		
 	def run(self):
 		while True:
@@ -107,15 +134,28 @@ class Herald(threading.Thread):
 		self.wid = wid
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.setblocking(True)
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
 	
 	def run(self):
 		while True:
-			for player in viper.WORLDS[self.wid]['players']:
-				addr = viper.WORLDS[self.wid]['players'][player]['addr']
-				port = viper.WORLDS[self.wid]['players'][player]['data-port']
-				msg = u'Hello %s, nice to have you here at the MBLA construction.' % player
-				try: self.sock.sendto(msg.encode('utf-8'), (addr,port) )
-				except: print(u'%s output error.' % self.name)
+			# Check if players data is unlocked
+			if not viper.WORLDS[self.wid]['lock-players']:
+				# Let others know that Heral is reading from it
+				self.readingFromPlayers = True
+				# Copy players data content
+				players_data = viper.WORLDS[self.wid]['players']
+				# Releases players data for reading
+				self.readingFromPlayers = False
+				# Uses data
+				for player in players_data:
+					addr = players_data[player]['addr']
+					port = players_data[player]['data-port']
+					msg = u'Hello %s, nice to have you here at the MBLA construction.' % player
+					try: self.sock.sendto(msg.encode('utf-8'), (addr,port) )
+					except: print(u'%s output error.' % self.name)
+				viper.HERALD_BUSY = False
 		time.sleep(1)
 
 
@@ -124,6 +164,10 @@ class Gaia(threading.Thread):
 	def __init__(self, wid):
 		threading.Thread.__init__(self, name='%s Gaia' % viper.WORLDS[wid]['name'])
 		self.wid = wid
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
+	
 	def run(self):
 		pass
 
@@ -133,6 +177,10 @@ class Ego(threading.Thread):
 	def __init__(self, wid):
 		threading.Thread.__init__(self, name='%s Ego' % viper.WORLDS[wid]['name'])
 		self.wid = wid
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
+	
 	def run(self):
 		pass
 
@@ -142,7 +190,9 @@ class Director(threading.Thread):
 	def __init__(self, wid):
 		threading.Thread.__init__(self, name='%s Director' % viper.WORLDS[wid]['name'])
 		self.wid = wid
-		print(u'%s on SERVER_HOME: %s' % (self.name, viper.SERVER_HOME) )
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
 	
 	def run(self):
 		while True:
@@ -157,6 +207,10 @@ class Arbiter(threading.Thread):
 	def __init__(self, wid):
 		threading.Thread.__init__(self, name='%s Arbiter' % viper.WORLDS[wid]['name'])
 		self.wid = wid
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
+	
 	def run(self):
 		pass
 
@@ -166,6 +220,10 @@ class Designer(threading.Thread):
 		threading.Thread.__init__(self, name='%s Designer' % viper.WORLDS[wid]['name'])
 		self.wid = wid
 		viper.WORLDS[self.wid]['levels'] = []
+		self.readingFromPlayers = False
+		self.readingEntities = False
+		self.readingObjects = False
+		
 	
 	def run(self):
 		self.CreateWorld()
@@ -236,8 +294,20 @@ class Designer(threading.Thread):
 		viper.WORLDS[self.wid]['levels'][level].newSector(xSect, ySect)
 
 
+def playerDataInUse(wid):
+	for lord in viper.WORLDS[wid]['lords']:
+		if viper.WORLDS[wid]['lords'][lord].readingFromPlayers: return True
+	return False
 
+def entityDataInUse(wid):
+	for lord in viper.WORLDS[wid]['lords']:
+		if viper.WORLDS[wid]['lords'][lord].readingEntities: return True
+	return False
 
+def objectDataInUse(wid):
+	for lord in viper.WORLDS[wid]['lords']:
+		if viper.WORLDS[wid]['lords'][lord].readingFromObjects: return True
+	return False
 
 
 

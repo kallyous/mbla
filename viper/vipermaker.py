@@ -18,20 +18,19 @@ class Maker(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self, name='Lands Maker')
 		self.loadServerConf()
-		self.service_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		self.service_sock.setblocking(False)
-		self.service_sock.bind( (viper.SERVER_ADDR, viper.CONF['service-port']) )
-		self.temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		self.temp_sock.setblocking(False)
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.sock.settimeout(15)
+		self.sock.bind( (viper.SERVER_ADDR, viper.CONF['service-port']) )
+		self.sock.listen(50)
 	
 	def run(self):
 		# Launch worlds
 		self.startWorlds()
 		while True:
-			try: (data, addr) = self.service_sock.recvfrom(viper.BUFSIZE)
-			except BlockingIOError: pass
+			try: (conn, addr) = self.sock.accept()
+			except socket.timeout: pass
 			else:
-				data_str = data.decode('utf-8')
+				data_str = conn.recv(viper.BUFSIZE)
 				print('New connection: %s from %s %d' % (data_str, addr[0], addr[1]) )
 				(loggedIn, serv_service_port, cli_data_port, msg) = self.loginPlayer( data_str, addr[0] )
 				# Debug
@@ -46,11 +45,13 @@ class Maker(threading.Thread):
 				# -----
 				if loggedIn:
 					answer = u'%s %d' % (viper.SERVER_ADDR, serv_service_port)
-					print(u'Sending back %s to %s:%d' % (answer, addr[0], cli_data_port) )
+					print(u'Sending back %s' % answer)
 				else:
 					answer = msg
-				try: self.temp_sock.sendto(answer.encode('utf-8'), (addr[0], cli_data_port) )
-				except: pass
+				try: conn.sendall(answer.encode('utf-8'), viper.BUFSIZE)
+				except socket.timeout: print('Tiemd out when sending answer')
+				else: print('Answer successfully sent')
+				finally: conn.close()
 			time.sleep(1)
 	
 	def loginPlayer(self, data_str, addr):

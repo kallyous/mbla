@@ -15,6 +15,8 @@ class GameClient(threading.Thread):
         self.sock_graphics = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_graphics.setblocking(False)
         self.sock_graphics.bind( (HOST_ADDR, snek.CONF['graphics_port']) )
+        self.sock_handshake = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock_handshake.settimeout(15)
         self.handshake = '%d %d' % (snek.CONF['data_port'], snek.CONF['graphics_port'])
         self.rem_serv_info = (snek.CONF['remote_server_ip'], snek.CONF['remove_server_port'])
         self.online = False
@@ -26,49 +28,47 @@ class GameClient(threading.Thread):
         # Interface loop
         while True:
             print(u'\tReady to connect. Local game not implemented.')
-            email = input(u'\tEmail: ')
-            login = input(u'\tUsername: ')
-            password = input(u'\tPassword: ')
+            #email = input(u'\tEmail: ')
+            email = u'email@mail.com'
+            #login = input(u'\tUsername: ')
+            login = u'Lucas'
+            #password = input(u'\tPassword: ')
+            password = u'12345'
             if login != '' and password != '' and email != '':
                 handshake += u' %s %s %s' % (login, password, email)
                 print('\tSending ', end='', flush=False)
                 print(handshake, end='', flush=False)
                 print(' to ', end='', flush=False)
                 print(self.rem_serv_info)
-                try: self.sock_out.sendto(handshake.encode('utf-8'), self.rem_serv_info )
-                except OSError:
-                    print('OS Error. Check your internet connection.')
-                    sys.exit(1)
-            print('\n\twaiting for the server...', end='', flush=True)
-            for i in range(10):
-                for j in range(10):
-                    time.sleep(1)
-                    try: (data,addr) = self.sock_data.recvfrom(snek.BUFSIZE)
-                    except BlockingIOError: pass
-                    else:
-                        answer = data.decode('utf-8')
-                        print('Server answer: %s' % answer)
-                        content = answer.split()
-                        if len(content) == 2:
-                            serv_eff_addr = content[0]
-                            serv_eff_port = treatData(content[1])
-                            self.id_hash = content[2]
-                        else: continue
-                        snek.EFF_REM_SERV = ( treatData(serv_eff_addr), treatData(serv_eff_port ) )
-                        self.online = True
-                        break
-                    print(' %d' % (10 - j), end=u'', flush=True)
-                if self.online:
-                    print('\n\tServer answered. We are online!')
-                    print('\tConnected to ', end='')
-                    print(snek.EFF_REM_SERV)
+                for i in range(10):
+                    print('\tConnection attempt #%d' % (i+1) )
+                    if i == 9: print('\tLast attempt.')
+                    # Try to connect
+                    try: self.sock_handshake.connect( self.rem_serv_info )
+                    except socket.timeout:
+                        print('\tConnection timed out.')
+                        continue
+                    # Try to send handshake and receive the answer
+                    try:
+                        self.sock_handshake.sendall(handshake.encode('utf-8'))
+                        serv_answer = self.sock_handshake.recv(snek.BUFSIZE).decode('utf-8')
+                    except socket.timeout:
+                        print('\tData exchange timed out.')
+                        continue
+                    # Quick answer checkup then store it
+                    print(u'\tReceived form server: %s' % serv_answer)
+                    content = serv_answer.split()
+                    if not len(content) == 2:
+                        print(u'\tServer answer must have [addr port]')
+                        self.sock_handshake.close()
+                        continue
+                    snek.EFF_REM_SERV = ( treatData(content[0]), treatData(content[1]) )
+                    # If we reach here, we should be OK to start exchanging data.
+                    self.online = True
+                    print('We are online!')
+                    # Close connection and proceeds to game loop
+                    self.sock_handshake.close()
                     break
-                else:
-                    print('\n\tNo answer. Sending handshake again.\n\twaiting for the server...', end='', flush=True)
-                    try: self.sock_out.sendto(handshake.encode('utf-8'), self.rem_serv_info )
-                    except OSError:
-                        print('\n\tOS Error. Check your internet connection.')
-                        break
             
             # Game loop
             print('\n\nRunning...')
@@ -94,8 +94,8 @@ class GameClient(threading.Thread):
                 #    afk - client detected the player is not giving input
                 #    off - player purposely left the game
                 # this may be usefull.
-                msg = u'%s\n' % self.id_hash # For identification
-                msg += u'KeyStrokeSequenceCompactedByTheClient\n' # For the director to process
+                #msg = u'%s\n' % self.id_hash # For identification
+                msg = u'KeyStrokeSequenceCompactedByTheClient\n' # For the director to process
                 msg += u'800 600' # Screen resolution. For sectors loading and graphics packing. Max 1920 1080.
                 self.sock_out.sendto(msg.encode('utf-8'), snek.EFF_REM_SERV)
                 
